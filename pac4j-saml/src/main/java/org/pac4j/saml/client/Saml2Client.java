@@ -16,13 +16,24 @@
 
 package org.pac4j.saml.client;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.velocity.app.VelocityEngine;
+import org.bouncycastle.ocsp.Req;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.binding.decoding.HTTPPostDecoder;
@@ -43,15 +54,19 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.encryption.DecryptionException;
+import org.opensaml.xml.io.Marshaller;
+import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.parse.StaticBasicParserPool;
 import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.security.keyinfo.NamedKeyInfoGeneratorManager;
 import org.opensaml.xml.security.x509.X509KeyInfoGeneratorFactory;
 import org.opensaml.xml.signature.SignatureTrustEngine;
+import org.opensaml.xml.util.Base64;
 import org.pac4j.core.client.BaseClient;
 import org.pac4j.core.client.Protocol;
 import org.pac4j.core.client.RedirectAction;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.RequiresHttpAction;
 import org.pac4j.core.exception.TechnicalException;
@@ -74,11 +89,20 @@ import org.pac4j.saml.util.VelocityEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSOutput;
+import org.w3c.dom.ls.LSSerializer;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * This class is the client to authenticate users with a SAML2 Identity Provider. This implementation relies on the Web
  * Browser SSO profile with HTTP-POST binding. (http://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf).
- * 
+ *
  * @author Michael Remond
  * @since 1.5.0
  */
@@ -117,6 +141,19 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
 
     private String spMetadata;
 
+    // If this flag is on, SAML2 client will retrieve a OAuth2 token/refresh token pair
+    // by invoking oauth2TokenEndpoint with SAML2 assertion.
+    private boolean oauth2ExchangeEnabled = false;
+
+    private String oauth2TokenEndpoint;
+
+    private String oauth2ClientID;
+
+    private String oauth2ClientSecret;
+
+    // If devMode flag is on, https certificate validation will be disabled.
+    private boolean devMode = false;
+
     @Override
     protected void internalInit() {
 
@@ -125,6 +162,13 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         CommonHelper.assertNotBlank("privateKeyPassword", this.privateKeyPassword);
         CommonHelper.assertNotBlank("idpMetadataPath", this.idpMetadataPath);
         CommonHelper.assertNotBlank("callbackUrl", this.callbackUrl);
+
+        if (this.oauth2ExchangeEnabled) {
+            CommonHelper.assertNotBlank("oauth2TokenEndpoint", this.oauth2TokenEndpoint);
+            CommonHelper.assertNotBlank("oauth2ClientID", this.oauth2ClientID);
+            CommonHelper.assertNotBlank("oauth2ClientSecret", this.oauth2ClientSecret);
+        }
+
         if (!this.callbackUrl.startsWith("http")) {
             throw new TechnicalException("SAML callbackUrl must be absolute");
         }
@@ -313,7 +357,7 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
             }
         }
 
-        return new Saml2Credentials(nameId, attributes, getName());
+        return new Saml2Credentials(nameId, attributes, getName(), subjectAssertion);
     }
 
     @Override
@@ -329,6 +373,48 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 values.add(value);
             }
             profile.addAttribute(attribute.getName(), values);
+        }
+
+        // TODO: Exchange SAML2 Assertion for OAuth2 Token.
+        if(oauth2ExchangeEnabled){
+            if(devMode){
+                disableSSLCertificateValidation();
+            }
+
+            try{
+                String samlAssertion = marshall(credentials.getAssertion());
+                String encodedSAMLAssertion = URLEncoder.encode(Base64.encodeBytes(samlAssertion.getBytes()), "UTF-8");
+
+                HttpClient httpClient = new HttpClient();
+
+                PostMethod retrieveOAuthToken = new PostMethod(this.oauth2TokenEndpoint);
+                retrieveOAuthToken.addRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+                retrieveOAuthToken.addRequestHeader("Authorization",  "Basic " + Base64.encodeBytes((this.oauth2ClientID + ":" + this.oauth2ClientSecret).getBytes(), Base64.DONT_BREAK_LINES));
+                retrieveOAuthToken.addParameter("grant_type", "urn:ietf:params:oauth:grant-type:saml2-bearer");
+                retrieveOAuthToken.addParameter("assertion", encodedSAMLAssertion);
+                retrieveOAuthToken.addParameter("scope", "PRODUCTION");
+
+                int returnCode = httpClient.executeMethod(retrieveOAuthToken);
+
+                if(HttpStatus.SC_OK != returnCode){
+                    String errMsg = "SAML2 Assertion to OAuth2 token exchange failed. Returned HTTP code: " + returnCode + ". Error: " + retrieveOAuthToken.getResponseBodyAsString();
+                    logger.error(errMsg);
+                    throw new Exception(errMsg);
+                }
+
+                // TODO: Currently we only support OAuth2 token endpoints with JSON response in following format.
+                // TODO:    - {"token_type":"bearer","expires_in":2232,"refresh_token":"815a65497c66ee186164418d518bdcea","access_token":"18b85eda38175bfa54ba12c7354f3dd8"}
+
+                JSONParser jsonParser = new JSONParser();
+                JSONObject oauthTokenResponse = (JSONObject)jsonParser.parse(new InputStreamReader(retrieveOAuthToken.getResponseBodyAsStream()));
+
+                profile.addAttribute("access_token", oauthTokenResponse.get("access_token"));
+                profile.addAttribute("refresh_token", oauthTokenResponse.get("refresh_token"));
+            } catch (Exception e) {
+                String errMessage = "Unable to exchange SAML2 assertion for a OAuth2 token.";
+                logger.error(errMessage, e);
+                throw new SamlException(errMessage, e);
+            }
         }
 
         return profile;
@@ -368,4 +454,81 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         return this.spMetadata;
     }
 
+    private String marshall(XMLObject xmlObject) throws Exception {
+        System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+                "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+
+        MarshallerFactory marshallerFactory =
+                org.opensaml.xml.Configuration.getMarshallerFactory();
+        Marshaller marshaller = marshallerFactory.getMarshaller(xmlObject);
+        Element element = marshaller.marshall(xmlObject);
+
+        ByteArrayOutputStream byteArrayOutputStrm = new ByteArrayOutputStream();
+        DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+        DOMImplementationLS impl = (DOMImplementationLS) registry.getDOMImplementation("LS");
+        LSSerializer writer = impl.createLSSerializer();
+        LSOutput output = impl.createLSOutput();
+        output.setByteStream(byteArrayOutputStrm);
+        writer.write(element, output);
+        return byteArrayOutputStrm.toString();
+    }
+
+    private void disableSSLCertificateValidation() {
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+
+                    public void checkClientTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (GeneralSecurityException e) {
+        }
+    }
+
+    public boolean isOauth2ExchangeEnabled() {
+        return oauth2ExchangeEnabled;
+    }
+
+    public void setOauth2ExchangeEnabled(boolean oauth2ExchangeEnabled) {
+        this.oauth2ExchangeEnabled = oauth2ExchangeEnabled;
+    }
+
+    public String getOauth2TokenEndpoint() {
+        return oauth2TokenEndpoint;
+    }
+
+    public void setOauth2TokenEndpoint(String oauth2TokenEndpoint) {
+        this.oauth2TokenEndpoint = oauth2TokenEndpoint;
+    }
+
+    public String getOauth2ClientID() {
+        return oauth2ClientID;
+    }
+
+    public void setOauth2ClientID(String oauth2ClientID) {
+        this.oauth2ClientID = oauth2ClientID;
+    }
+
+    public String getOauth2ClientSecret() {
+        return oauth2ClientSecret;
+    }
+
+    public void setOauth2ClientSecret(String oauth2ClientSecret) {
+        this.oauth2ClientSecret = oauth2ClientSecret;
+    }
 }

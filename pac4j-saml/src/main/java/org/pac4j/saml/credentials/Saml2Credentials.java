@@ -18,6 +18,7 @@ package org.pac4j.saml.credentials;
 
 import java.util.List;
 
+import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Attribute;
 import org.opensaml.saml2.core.NameID;
 import org.pac4j.core.credentials.Credentials;
@@ -36,9 +37,12 @@ public class Saml2Credentials extends Credentials {
 
     private final List<Attribute> attributes;
 
-    public Saml2Credentials(final NameID nameId, final List<Attribute> attributes, final String clientName) {
+    private final Assertion assertion;
+
+    public Saml2Credentials(final NameID nameId, final List<Attribute> attributes, final String clientName, final Assertion assertion) {
         this.nameId = nameId;
         this.attributes = attributes;
+        this.assertion = assertion;
         setClientName(clientName);
     }
 
@@ -48,6 +52,10 @@ public class Saml2Credentials extends Credentials {
 
     public List<Attribute> getAttributes() {
         return this.attributes;
+    }
+
+    public Assertion getAssertion() {
+        return assertion;
     }
 
     @Override
