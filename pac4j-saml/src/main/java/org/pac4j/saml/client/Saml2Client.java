@@ -16,8 +16,10 @@
 
 package org.pac4j.saml.client;
 
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.velocity.app.VelocityEngine;
 import org.json.simple.JSONObject;
@@ -83,6 +85,7 @@ import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -369,10 +372,6 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
 
         // TODO: Exchange SAML2 Assertion for OAuth2 Token.
         if(oauth2ExchangeEnabled){
-            if(devMode){
-                disableSSLCertificateValidation();
-            }
-
             try{
                 String samlAssertion = marshall(credentials.getAssertion());
                 String encodedSAMLAssertion = URLEncoder.encode(Base64.encodeBytes(samlAssertion.getBytes()), "UTF-8");
@@ -386,7 +385,19 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 retrieveOAuthToken.addParameter("assertion", encodedSAMLAssertion);
                 retrieveOAuthToken.addParameter("scope", "PRODUCTION");
 
-                int returnCode = httpClient.executeMethod(retrieveOAuthToken);
+                int returnCode = -1;
+
+                if(devMode){
+                    System.out.println("In Dev Mode.");
+                    URI oauth2TokenEndpoint = new URI(this.oauth2TokenEndpoint);
+                    org.apache.commons.httpclient.protocol.Protocol easyhttps = new org.apache.commons.httpclient.protocol.Protocol("https", new EasySSLProtocolSocketFactory(), 443);
+                    HostConfiguration hc = new HostConfiguration();
+                    hc.setHost(oauth2TokenEndpoint.getHost(), oauth2TokenEndpoint.getPort(), easyhttps);
+
+                    returnCode = httpClient.executeMethod(hc, retrieveOAuthToken);
+                } else {
+                    returnCode = httpClient.executeMethod(retrieveOAuthToken);
+                }
 
                 if(HttpStatus.SC_OK != returnCode){
                     String errMsg = "SAML2 Assertion to OAuth2 token exchange failed. Returned HTTP code: " + returnCode + ". Error: " + retrieveOAuthToken.getResponseBodyAsString();
@@ -463,33 +474,6 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         output.setByteStream(byteArrayOutputStrm);
         writer.write(element, output);
         return byteArrayOutputStrm.toString();
-    }
-
-    private void disableSSLCertificateValidation() {
-        // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-
-                    public void checkClientTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-
-                    public void checkServerTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                }
-        };
-
-        // Install the all-trusting trust manager
-        try {
-            SSLContext sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (GeneralSecurityException e) {
-        }
     }
 
     public boolean isOauth2ExchangeEnabled() {
