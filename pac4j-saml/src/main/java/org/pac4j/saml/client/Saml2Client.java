@@ -376,7 +376,35 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 String samlAssertion = marshall(credentials.getAssertion());
                 String encodedSAMLAssertion = URLEncoder.encode(Base64.encodeBytes(samlAssertion.getBytes()), "UTF-8");
 
-                HttpClient httpClient = new HttpClient();
+                HttpClient httpClient = null;
+
+                if(devMode){
+                    SSLContext sslContext = new SSLContext.getInstance("SSL");
+                    sslContext.init(null, new TrustManager[] {
+                            new X509TrustManager(){
+                                public X509Certificate[] getAcceptedIssuers(){
+                                    return null;
+                                }
+
+                                public void checkClientTrusted(X509Certificate[] certs, String authType){
+
+                                }
+
+                                public void checkServerTrusted(X509Certificate[] certs, String authType){
+
+                                }
+                            }
+                        }, new SecureRandom());
+                    SSLSocketFactory sf = new SSLSocketFactory(sslContext);
+                    Scheme httpsScheme = new Scheme("https", 443, sf);
+                    SchemeRegistry schemeRegistry = new SchemeRegistry();
+                    schemeRegistry.register(httpsScheme);
+
+                    ClientConnectionManager cm = new SingleClientConnManager(schemeRegistry);
+                    httpClient = new DefaultHttpClient(cm);
+                } else {
+                    httpClient = new HttpClient();
+                }
 
                 PostMethod retrieveOAuthToken = new PostMethod(this.oauth2TokenEndpoint);
                 retrieveOAuthToken.addRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -385,19 +413,7 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 retrieveOAuthToken.addParameter("assertion", encodedSAMLAssertion);
                 retrieveOAuthToken.addParameter("scope", "PRODUCTION");
 
-                int returnCode = -1;
-
-                if(devMode){
-                    System.out.println("In Dev Mode.");
-                    URI oauth2TokenEndpoint = new URI(this.oauth2TokenEndpoint);
-                    org.apache.commons.httpclient.protocol.Protocol easyhttps = new org.apache.commons.httpclient.protocol.Protocol("https", new EasySSLProtocolSocketFactory(), 443);
-                    HostConfiguration hc = new HostConfiguration();
-                    hc.setHost(oauth2TokenEndpoint.getHost(), oauth2TokenEndpoint.getPort(), easyhttps);
-
-                    returnCode = httpClient.executeMethod(hc, retrieveOAuthToken);
-                } else {
-                    returnCode = httpClient.executeMethod(retrieveOAuthToken);
-                }
+                int returnCode = httpClient.executeMethod(retrieveOAuthToken);
 
                 if(HttpStatus.SC_OK != returnCode){
                     String errMsg = "SAML2 Assertion to OAuth2 token exchange failed. Returned HTTP code: " + returnCode + ". Error: " + retrieveOAuthToken.getResponseBodyAsString();
