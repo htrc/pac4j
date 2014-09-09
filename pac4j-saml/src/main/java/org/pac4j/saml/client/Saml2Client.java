@@ -16,11 +16,16 @@
 
 package org.pac4j.saml.client;
 
-import org.apache.commons.httpclient.HostConfiguration;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.velocity.app.VelocityEngine;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -90,6 +95,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -379,32 +385,12 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 HttpClient httpClient = null;
 
                 if(devMode){
-                    SSLContext sslContext = new SSLContext.getInstance("SSL");
-                    sslContext.init(null, new TrustManager[] {
-                            new X509TrustManager(){
-                                public X509Certificate[] getAcceptedIssuers(){
-                                    return null;
-                                }
-
-                                public void checkClientTrusted(X509Certificate[] certs, String authType){
-
-                                }
-
-                                public void checkServerTrusted(X509Certificate[] certs, String authType){
-
-                                }
-                            }
-                        }, new SecureRandom());
-                    SSLSocketFactory sf = new SSLSocketFactory(sslContext);
-                    Scheme httpsScheme = new Scheme("https", 443, sf);
-                    SchemeRegistry schemeRegistry = new SchemeRegistry();
-                    schemeRegistry.register(httpsScheme);
-
-                    ClientConnectionManager cm = new SingleClientConnManager(schemeRegistry);
-                    httpClient = new DefaultHttpClient(cm);
-                } else {
-                    httpClient = new HttpClient();
+                    org.apache.commons.httpclient.protocol.Protocol easyhttps = new org.apache.commons.httpclient.protocol.Protocol("https", (ProtocolSocketFactory)new EasySSLProtocolSocketFactory(), 443);
+                    org.apache.commons.httpclient.protocol.Protocol.registerProtocol("https", easyhttps);
                 }
+
+                httpClient = new HttpClient();
+
 
                 PostMethod retrieveOAuthToken = new PostMethod(this.oauth2TokenEndpoint);
                 retrieveOAuthToken.addRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
