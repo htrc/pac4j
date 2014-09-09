@@ -523,4 +523,8 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
     public void setOauth2ClientSecret(String oauth2ClientSecret) {
         this.oauth2ClientSecret = oauth2ClientSecret;
     }
+
+    public void setDevMode(boolean devMode) {
+        this.devMode = devMode;
+    }
 }
