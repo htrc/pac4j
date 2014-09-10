@@ -490,7 +490,6 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                             return true;
                         }
                     });
-            );
         } catch (GeneralSecurityException e) {
         }
     }
