@@ -364,9 +364,9 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         }
 
         // TODO: Exchange SAML2 Assertion for OAuth2 Token.
-        if(oauth2ExchangeEnabled){
-            try{
-                if(this.devMode){
+        if (oauth2ExchangeEnabled) {
+            try {
+                if (this.devMode) {
                     disableSelfSignedCertValidation();
                 }
 
@@ -378,21 +378,21 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 //Create connection to the Token endpoint of API manger
                 URL url = new URL(this.oauth2TokenEndpoint);
 
-                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
 
                 // Set the consumer-key and Consumer-secret
-                connection.setRequestProperty ("Authorization", "Basic " + Base64.encodeBytes((this.oauth2ClientID + ":" + this.oauth2ClientSecret).getBytes(), Base64.DONT_BREAK_LINES));
+                connection.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((this.oauth2ClientID + ":" + this.oauth2ClientSecret).getBytes(), Base64.DONT_BREAK_LINES));
                 connection.setUseCaches(false);
                 connection.setDoInput(true);
                 connection.setDoOutput(true);
 
                 //Send request
                 DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes (urlParameters);
-                wr.flush ();
-                wr.close ();
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
 
                 //Get Response
                 InputStream is = connection.getInputStream();
@@ -400,7 +400,7 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
 
                 String line;
                 StringBuffer response = new StringBuffer();
-                while((line = rd.readLine()) != null) {
+                while ((line = rd.readLine()) != null) {
                     response.append(line);
                     response.append('\r');
                 }
@@ -411,7 +411,7 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 // TODO:    - {"token_type":"bearer","expires_in":2232,"refresh_token":"815a65497c66ee186164418d518bdcea","access_token":"18b85eda38175bfa54ba12c7354f3dd8"}
 
                 JSONParser jsonParser = new JSONParser();
-                JSONObject oauthTokenResponse = (JSONObject)jsonParser.parse(response.toString());
+                JSONObject oauthTokenResponse = (JSONObject) jsonParser.parse(response.toString());
 
                 profile.addAttribute("access_token", oauthTokenResponse.get("access_token"));
                 profile.addAttribute("refresh_token", oauthTokenResponse.get("refresh_token"));
@@ -459,16 +459,18 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         return this.spMetadata;
     }
 
-    private void disableSelfSignedCertValidation(){
+    private void disableSelfSignedCertValidation() {
         // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[] {
+        TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                         return null;
                     }
+
                     public void checkClientTrusted(
                             java.security.cert.X509Certificate[] certs, String authType) {
                     }
+
                     public void checkServerTrusted(
                             java.security.cert.X509Certificate[] certs, String authType) {
                     }
@@ -480,6 +482,15 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
             SSLContext sc = SSLContext.getInstance("SSL");
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(
+                    new javax.net.ssl.HostnameVerifier() {
+
+                        public boolean verify(String hostname,
+                                              javax.net.ssl.SSLSession sslSession) {
+                            return true;
+                        }
+                    });
+            );
         } catch (GeneralSecurityException e) {
         }
     }
