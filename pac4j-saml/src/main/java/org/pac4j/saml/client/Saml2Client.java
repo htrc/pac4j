@@ -16,16 +16,6 @@
 
 package org.pac4j.saml.client;
 
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.velocity.app.VelocityEngine;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -87,15 +77,12 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.URI;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -379,39 +366,52 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         // TODO: Exchange SAML2 Assertion for OAuth2 Token.
         if(oauth2ExchangeEnabled){
             try{
+                if(this.devMode){
+                    disableSelfSignedCertValidation();
+                }
+
                 String samlAssertion = marshall(credentials.getAssertion());
                 String encodedSAMLAssertion = URLEncoder.encode(Base64.encodeBytes(samlAssertion.getBytes()), "UTF-8");
 
-                HttpClient httpClient = null;
+                String urlParameters = "grant_type=urn:ietf:params:oauth:grant-type:saml2-bearer&assertion=" + encodedSAMLAssertion + "&scope=PRODUCTION";
 
-                if(devMode){
-                    org.apache.commons.httpclient.protocol.Protocol easyhttps = new org.apache.commons.httpclient.protocol.Protocol("https", (ProtocolSocketFactory)new EasySSLProtocolSocketFactory(), 443);
-                    org.apache.commons.httpclient.protocol.Protocol.registerProtocol("https", easyhttps);
+                //Create connection to the Token endpoint of API manger
+                URL url = new URL(this.oauth2TokenEndpoint);
+
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+
+                // Set the consumer-key and Consumer-secret
+                connection.setRequestProperty ("Authorization", "Basic " + Base64.encodeBytes((this.oauth2ClientID + ":" + this.oauth2ClientSecret).getBytes(), Base64.DONT_BREAK_LINES));
+                connection.setUseCaches(false);
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+
+                //Send request
+                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                wr.writeBytes (urlParameters);
+                wr.flush ();
+                wr.close ();
+
+                //Get Response
+                InputStream is = connection.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+
+                String line;
+                StringBuffer response = new StringBuffer();
+                while((line = rd.readLine()) != null) {
+                    response.append(line);
+                    response.append('\r');
                 }
 
-                httpClient = new HttpClient();
-
-
-                PostMethod retrieveOAuthToken = new PostMethod(this.oauth2TokenEndpoint);
-                retrieveOAuthToken.addRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-                retrieveOAuthToken.addRequestHeader("Authorization",  "Basic " + Base64.encodeBytes((this.oauth2ClientID + ":" + this.oauth2ClientSecret).getBytes(), Base64.DONT_BREAK_LINES));
-                retrieveOAuthToken.addParameter("grant_type", "urn:ietf:params:oauth:grant-type:saml2-bearer");
-                retrieveOAuthToken.addParameter("assertion", encodedSAMLAssertion);
-                retrieveOAuthToken.addParameter("scope", "PRODUCTION");
-
-                int returnCode = httpClient.executeMethod(retrieveOAuthToken);
-
-                if(HttpStatus.SC_OK != returnCode){
-                    String errMsg = "SAML2 Assertion to OAuth2 token exchange failed. Returned HTTP code: " + returnCode + ". Error: " + retrieveOAuthToken.getResponseBodyAsString();
-                    logger.error(errMsg);
-                    throw new Exception(errMsg);
-                }
+                rd.close();
 
                 // TODO: Currently we only support OAuth2 token endpoints with JSON response in following format.
                 // TODO:    - {"token_type":"bearer","expires_in":2232,"refresh_token":"815a65497c66ee186164418d518bdcea","access_token":"18b85eda38175bfa54ba12c7354f3dd8"}
 
                 JSONParser jsonParser = new JSONParser();
-                JSONObject oauthTokenResponse = (JSONObject)jsonParser.parse(new InputStreamReader(retrieveOAuthToken.getResponseBodyAsStream()));
+                JSONObject oauthTokenResponse = (JSONObject)jsonParser.parse(response.toString());
 
                 profile.addAttribute("access_token", oauthTokenResponse.get("access_token"));
                 profile.addAttribute("refresh_token", oauthTokenResponse.get("refresh_token"));
@@ -457,6 +457,31 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
     public String printClientMetadata() {
         init();
         return this.spMetadata;
+    }
+
+    private void disableSelfSignedCertValidation(){
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                    public void checkClientTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (GeneralSecurityException e) {
+        }
     }
 
     private String marshall(XMLObject xmlObject) throws Exception {
