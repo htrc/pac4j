@@ -61,6 +61,7 @@ import org.pac4j.saml.metadata.Saml2MetadataGenerator;
 import org.pac4j.saml.profile.Saml2Profile;
 import org.pac4j.saml.sso.Saml2AuthnRequestBuilder;
 import org.pac4j.saml.sso.Saml2ResponseValidator;
+import org.pac4j.saml.sso.Saml2SingleLogoutRequestBuilder;
 import org.pac4j.saml.sso.Saml2WebSSOProfileHandler;
 import org.pac4j.saml.transport.Pac4jHTTPPostDecoder;
 import org.pac4j.saml.transport.SimpleResponseAdapter;
@@ -118,6 +119,8 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
     private Saml2ContextProvider contextProvider;
 
     private Saml2AuthnRequestBuilder authnRequestBuilder;
+
+    private Saml2SingleLogoutRequestBuilder logoutRequestBuilder;
 
     private Saml2WebSSOProfileHandler handler;
 
@@ -257,6 +260,8 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         VelocityEngine velocityEngine = VelocityEngineFactory.getEngine();
         // Get an AuthnRequest builder
         this.authnRequestBuilder = new Saml2AuthnRequestBuilder();
+        // LogoutRequest builder
+        this.logoutRequestBuilder = new Saml2SingleLogoutRequestBuilder();
 
         // Build the WebSSO handler for sending and receiving SAML2 messages
         HTTPPostEncoder postEncoder = new HTTPPostEncoder(velocityEngine, "/templates/saml2-post-binding.vm");
@@ -363,7 +368,6 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
             profile.addAttribute(attribute.getName(), values);
         }
 
-        // TODO: Exchange SAML2 Assertion for OAuth2 Token.
         if (oauth2ExchangeEnabled) {
             try {
                 if (this.devMode) {
@@ -428,6 +432,19 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
     @Override
     public Protocol getProtocol() {
         return Protocol.SAML;
+    }
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(Saml2Profile saml2Profile, WebContext wc) {
+        ExtendedSAMLMessageContext samlMessageContext = this.contextProvider.buildSpContext(wc);
+        LogoutRequest logoutRequest = this.logoutRequestBuilder.build(samlMessageContext, saml2Profile);
+
+        // TODO: Fix relay state.
+        this.handler.sendMessage(samlMessageContext, logoutRequest, "");
+
+        String content = ((SimpleResponseAdapter) samlMessageContext.getOutboundMessageTransport()).getOutgoingContent();
+
+        return RedirectAction.success(content);
     }
 
     public void setIdpMetadataPath(final String idpMetadataPath) {

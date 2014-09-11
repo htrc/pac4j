@@ -17,6 +17,7 @@ package org.pac4j.oauth.client;
 
 import java.util.Iterator;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oauth.profile.JsonHelper;
@@ -64,7 +65,12 @@ public class CasOAuthWrapperClient extends BaseOAuth20Client<CasOAuthWrapperProf
         newClient.setSpringSecurityCompliant(this.springSecurityCompliant);
         return newClient;
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(CasOAuthWrapperProfile casOAuthWrapperProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

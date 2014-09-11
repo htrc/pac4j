@@ -18,10 +18,7 @@ package org.pac4j.saml.util;
 
 import java.util.List;
 
-import org.opensaml.saml2.metadata.AssertionConsumerService;
-import org.opensaml.saml2.metadata.IDPSSODescriptor;
-import org.opensaml.saml2.metadata.SPSSODescriptor;
-import org.opensaml.saml2.metadata.SingleSignOnService;
+import org.opensaml.saml2.metadata.*;
 import org.pac4j.saml.exceptions.SamlException;
 
 /**
@@ -38,6 +35,20 @@ public class SamlUtils {
 
         List<SingleSignOnService> services = idpssoDescriptor.getSingleSignOnServices();
         for (SingleSignOnService service : services) {
+            if (service.getBinding().equals(binding)) {
+                return service;
+            }
+        }
+        throw new SamlException("Identity provider has no single sign on service available for the selected profile"
+                + idpssoDescriptor);
+
+    }
+
+    public static SingleLogoutService getSingleLogoutService(final IDPSSODescriptor idpssoDescriptor,
+                                                             final String binding) {
+
+        List<SingleLogoutService> services = idpssoDescriptor.getSingleLogoutServices();
+        for (SingleLogoutService service : services) {
             if (service.getBinding().equals(binding)) {
                 return service;
             }

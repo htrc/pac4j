@@ -143,7 +143,12 @@ public final class CasProxyReceptor extends BaseClient<CasCredentials, CasProfil
                                      this.proxyGrantingTicketStorage, "millisBetweenCleanUps",
                                      this.millisBetweenCleanUps);
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(CasProfile casProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     /**
      * {@inheritDoc}
      */

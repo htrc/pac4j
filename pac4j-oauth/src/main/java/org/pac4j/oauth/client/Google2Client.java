@@ -15,6 +15,7 @@
  */
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oauth.client.exception.OAuthCredentialsException;
@@ -72,6 +73,11 @@ public class Google2Client extends BaseOAuth20Client<Google2Profile> {
         final Google2Client newClient = new Google2Client();
         newClient.setScope(this.scope);
         return newClient;
+    }
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(Google2Profile google2Profile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override

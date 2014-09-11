@@ -16,6 +16,7 @@
 package org.pac4j.oauth.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.oauth.profile.OAuthAttributesDefinitions;
@@ -46,7 +47,12 @@ public class BitbucketClient extends BaseOAuth10Client<BitbucketProfile>
     protected boolean isDirectRedirection() {
         return true;
     }
-  
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(BitbucketProfile bitbucketProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     public BitbucketClient(final String key, final String secret) {
         setKey(key);
         setSecret(secret);

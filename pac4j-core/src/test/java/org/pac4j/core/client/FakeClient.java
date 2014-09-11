@@ -44,6 +44,11 @@ public class FakeClient extends BaseClient<Credentials, CommonProfile> {
     }
 
     @Override
+    public RedirectAction retrieveLoutoutRedirectAction(CommonProfile commonProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
     protected void internalInit() {
         throw new UnsupportedOperationException("Not implemneted yet");
     }

@@ -309,4 +309,13 @@ Client<C, U>, Cloneable {
     public void setAuthorizationGenerator(final AuthorizationGenerator<U> authorizationGenerator) {
         addAuthorizationGenerator(authorizationGenerator);
     }
+
+    public RedirectAction getLogoutRedirectAction(U u, WebContext webContext){
+        return retrieveLoutoutRedirectAction(u, webContext);
+    }
+
+    /**
+     * Logout support
+     */
+    public abstract RedirectAction retrieveLoutoutRedirectAction(U u, WebContext context);
 }

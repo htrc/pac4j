@@ -1,5 +1,6 @@
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.oauth.profile.OAuthAttributesDefinitions;
@@ -56,7 +57,12 @@ public class VkClient extends BaseOAuth20Client<VkProfile> {
 		return client;
 	}
 
-	@Override
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(VkProfile vkProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
 	protected void internalInit() {
 		super.internalInit();
 		this.service = new ProxyOAuth20ServiceImpl(new VkApi(),

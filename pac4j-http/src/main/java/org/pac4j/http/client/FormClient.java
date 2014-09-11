@@ -161,7 +161,12 @@ public class FormClient extends BaseHttpClient {
                                      this.passwordParameter, "usernamePasswordAuthenticator",
                                      getUsernamePasswordAuthenticator(), "profileCreator", getProfileCreator());
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(HttpProfile httpProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected boolean isDirectRedirection() {
         return true;

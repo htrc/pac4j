@@ -16,6 +16,7 @@
 package org.pac4j.oauth.client;
 
 import org.apache.commons.lang3.StringUtils;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oauth.profile.JsonHelper;
@@ -66,7 +67,12 @@ public class PayPalClient extends BaseOAuth20Client<PayPalProfile> {
         newClient.setScope(this.scope);
         return newClient;
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(PayPalProfile payPalProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

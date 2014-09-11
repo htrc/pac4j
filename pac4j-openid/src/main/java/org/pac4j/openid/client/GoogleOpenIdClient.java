@@ -21,6 +21,7 @@ import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
 import org.pac4j.core.client.BaseClient;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.openid.credentials.OpenIdCredentials;
@@ -87,5 +88,10 @@ public class GoogleOpenIdClient extends BaseOpenIdClient<GoogleOpenIdProfile> {
     @Override
     public String toString() {
         return CommonHelper.toString(this.getClass(), "callbackUrl", this.callbackUrl, "name", getName());
+    }
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(GoogleOpenIdProfile googleOpenIdProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

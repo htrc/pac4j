@@ -16,6 +16,7 @@
 package org.pac4j.oauth.client;
 
 import org.apache.commons.lang3.StringUtils;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.HttpCommunicationException;
 import org.pac4j.core.util.CommonHelper;
@@ -103,7 +104,12 @@ public class FacebookClient extends BaseOAuth20Client<FacebookProfile> {
         newClient.setLimit(this.limit);
         return newClient;
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(FacebookProfile facebookProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

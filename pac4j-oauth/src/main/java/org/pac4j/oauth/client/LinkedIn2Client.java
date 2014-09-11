@@ -15,6 +15,7 @@
  */
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oauth.client.exception.OAuthCredentialsException;
@@ -66,7 +67,12 @@ public class LinkedIn2Client extends BaseOAuth20Client<LinkedIn2Profile> {
         newClient.setFields(this.fields);
         return newClient;
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(LinkedIn2Profile linkedIn2Profile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

@@ -15,6 +15,7 @@
  */
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.oauth.profile.OAuthAttributesDefinitions;
@@ -55,7 +56,12 @@ public class WordPressClient extends BaseOAuth20Client<WordPressProfile> {
     protected WordPressClient newClient() {
         return new WordPressClient();
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(WordPressProfile wordPressProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

@@ -15,6 +15,7 @@
  */
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oauth.profile.JsonHelper;
@@ -59,7 +60,12 @@ public class TwitterClient extends BaseOAuth10Client<TwitterProfile> {
     protected TwitterClient newClient() {
         return new TwitterClient();
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(TwitterProfile twitterProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

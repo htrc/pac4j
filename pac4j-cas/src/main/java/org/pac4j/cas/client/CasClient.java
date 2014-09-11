@@ -334,6 +334,11 @@ public class CasClient extends BaseClient<CasCredentials, CasProfile> {
     }
 
     @Override
+    public RedirectAction retrieveLoutoutRedirectAction(CasProfile casProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
     protected boolean isDirectRedirection() {
         return true;
     }

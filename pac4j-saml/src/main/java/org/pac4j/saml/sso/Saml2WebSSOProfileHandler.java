@@ -21,8 +21,10 @@ import org.opensaml.common.binding.security.SAMLProtocolMessageXMLSignatureSecur
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.binding.security.SAML2HTTPPostSimpleSignRule;
 import org.opensaml.saml2.core.AuthnRequest;
+import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml2.metadata.SingleSignOnService;
 import org.opensaml.ws.message.decoder.MessageDecoder;
 import org.opensaml.ws.message.decoder.MessageDecodingException;
@@ -84,6 +86,38 @@ public class Saml2WebSSOProfileHandler {
             context.setRelayState(relayState);
         }
 
+        boolean sign = spDescriptor.isAuthnRequestsSigned() || idpssoDescriptor.getWantAuthnRequestsSigned();
+
+        if (sign) {
+            context.setOutboundSAMLMessageSigningCredential(credentialProvider.getCredential());
+        }
+
+        try {
+            encoder.encode(context);
+        } catch (MessageEncodingException e) {
+            throw new SamlException("Error encoding saml message", e);
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sendMessage(final SAMLMessageContext context, final LogoutRequest logoutRequest, final String relayState) {
+
+        SPSSODescriptor spDescriptor = (SPSSODescriptor) context.getLocalEntityRoleMetadata();
+        IDPSSODescriptor idpssoDescriptor = (IDPSSODescriptor) context.getPeerEntityRoleMetadata();
+        SingleLogoutService ssoService = SamlUtils.getSingleLogoutService(idpssoDescriptor,
+                SAMLConstants.SAML2_POST_BINDING_URI);
+
+        context.setCommunicationProfileId(SAML2_WEBSSO_PROFILE_URI);
+        context.setOutboundMessage(logoutRequest);
+        context.setOutboundSAMLMessage(logoutRequest);
+        context.setPeerEntityEndpoint(ssoService);
+
+        if (relayState != null) {
+            context.setRelayState(relayState);
+        }
+
+        // TODO: Not sure about this part. How to check whether we need sign the logout request?
         boolean sign = spDescriptor.isAuthnRequestsSigned() || idpssoDescriptor.getWantAuthnRequestsSigned();
 
         if (sign) {

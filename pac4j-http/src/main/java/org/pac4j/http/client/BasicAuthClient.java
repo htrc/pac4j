@@ -134,6 +134,11 @@ public class BasicAuthClient extends BaseHttpClient {
     }
 
     @Override
+    public RedirectAction retrieveLoutoutRedirectAction(HttpProfile httpProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
     protected boolean isDirectRedirection() {
         return true;
     }

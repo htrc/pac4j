@@ -15,6 +15,7 @@
  */
 package org.pac4j.oauth.client;
 
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.credentials.OAuthCredentials;
 import org.pac4j.oauth.profile.JsonHelper;
@@ -53,7 +54,12 @@ public class DropBoxClient extends BaseOAuth10Client<DropBoxProfile> {
     protected DropBoxClient newClient() {
         return new DropBoxClient();
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(DropBoxProfile dropBoxProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

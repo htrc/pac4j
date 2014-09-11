@@ -73,4 +73,9 @@ public class MockBaseClient<C extends Credentials> extends BaseClient<C, CommonP
     public Protocol getProtocol() {
         return null;
     }
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(CommonProfile commonProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

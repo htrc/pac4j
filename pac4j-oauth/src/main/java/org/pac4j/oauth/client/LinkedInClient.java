@@ -16,6 +16,7 @@
 package org.pac4j.oauth.client;
 
 import org.apache.commons.lang3.StringUtils;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.profile.OAuthAttributesDefinitions;
 import org.pac4j.oauth.profile.linkedin.LinkedInAttributesDefinition;
@@ -54,7 +55,12 @@ public class LinkedInClient extends BaseOAuth10Client<LinkedInProfile> {
     protected LinkedInClient newClient() {
         return new LinkedInClient();
     }
-    
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(LinkedInProfile linkedInProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
     @Override
     protected void internalInit() {
         super.internalInit();

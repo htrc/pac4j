@@ -16,6 +16,7 @@
 package org.pac4j.oauth.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.oauth.profile.OAuthAttributesDefinitions;
@@ -46,6 +47,11 @@ public class FoursquareClient extends BaseOAuth20Client<FoursquareProfile>{
 
     protected FoursquareClient newClient() {
         return new FoursquareClient();
+    }
+
+    @Override
+    public RedirectAction retrieveLoutoutRedirectAction(FoursquareProfile foursquareProfile, WebContext context) {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     protected void internalInit() {
