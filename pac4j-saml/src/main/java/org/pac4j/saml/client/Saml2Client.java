@@ -319,7 +319,6 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         ExtendedSAMLMessageContext context = this.contextProvider.buildSpContext(wc);
         // assertion consumer url is pac4j callback url
         String callbackUrl = getCallbackUrl();
-        System.out.println("Callback Url: " + callbackUrl);
         context.setAssertionConsumerUrl(callbackUrl);
 
         SignatureTrustEngine trustEngine = this.signatureTrustEngineProvider.build();
