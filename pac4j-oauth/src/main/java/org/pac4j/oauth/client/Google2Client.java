@@ -76,7 +76,7 @@ public class Google2Client extends BaseOAuth20Client<Google2Profile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(Google2Profile google2Profile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(Google2Profile google2Profile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

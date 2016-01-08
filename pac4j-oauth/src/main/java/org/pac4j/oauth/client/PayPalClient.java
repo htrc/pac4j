@@ -69,7 +69,7 @@ public class PayPalClient extends BaseOAuth20Client<PayPalProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(PayPalProfile payPalProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(PayPalProfile payPalProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

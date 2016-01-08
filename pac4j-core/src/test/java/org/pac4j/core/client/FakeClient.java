@@ -44,8 +44,13 @@ public class FakeClient extends BaseClient<Credentials, CommonProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(CommonProfile commonProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(CommonProfile commonProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        throw new UnsupportedOperationException("Unsupported operation logout!");
     }
 
     @Override

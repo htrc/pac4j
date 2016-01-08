@@ -84,7 +84,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -400,7 +399,15 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 wr.close();
 
                 //Get Response
-                InputStream is = connection.getInputStream();
+                InputStream is;
+                int responseCode = connection.getResponseCode();
+
+                if(responseCode == 200) {
+                    is = connection.getInputStream();
+                } else {
+                    is = connection.getErrorStream();
+                }
+
                 BufferedReader rd = new BufferedReader(new InputStreamReader(is));
 
                 String line;
@@ -415,11 +422,17 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
                 // TODO: Currently we only support OAuth2 token endpoints with JSON response in following format.
                 // TODO:    - {"token_type":"bearer","expires_in":2232,"refresh_token":"815a65497c66ee186164418d518bdcea","access_token":"18b85eda38175bfa54ba12c7354f3dd8"}
 
-                JSONParser jsonParser = new JSONParser();
-                JSONObject oauthTokenResponse = (JSONObject) jsonParser.parse(response.toString());
+                if(responseCode == 200) {
+                    JSONParser jsonParser = new JSONParser();
+                    JSONObject oauthTokenResponse = (JSONObject) jsonParser.parse(response.toString());
 
-                profile.addAttribute("access_token", oauthTokenResponse.get("access_token"));
-                profile.addAttribute("refresh_token", oauthTokenResponse.get("refresh_token"));
+                    profile.addAttribute("access_token", oauthTokenResponse.get("access_token"));
+                    profile.addAttribute("refresh_token", oauthTokenResponse.get("refresh_token"));
+                } else {
+                    String error = "Server returned with error code "+ responseCode + " and error message: \n" + response.toString();
+                    logger.error(error);
+                    throw new IOException("Server returned with error code "+ responseCode + " for request to " + this.oauth2TokenEndpoint);
+                }
             } catch (Exception e) {
                 String errMessage = "Unable to exchange SAML2 assertion for a OAuth2 token.";
                 logger.error(errMessage, e);
@@ -436,7 +449,7 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(Saml2Profile saml2Profile, WebContext wc) {
+    public RedirectAction retrieveLogoutRedirectAction(Saml2Profile saml2Profile, WebContext wc) {
         ExtendedSAMLMessageContext samlMessageContext = this.contextProvider.buildSpContext(wc);
         LogoutRequest logoutRequest = this.logoutRequestBuilder.build(samlMessageContext, saml2Profile);
 
@@ -446,6 +459,21 @@ public class Saml2Client extends BaseClient<Saml2Credentials, Saml2Profile> {
         String content = ((SimpleResponseAdapter) samlMessageContext.getOutboundMessageTransport()).getOutgoingContent();
 
         return RedirectAction.success(content);
+    }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        ExtendedSAMLMessageContext context = this.contextProvider.buildSpContext(webContext);
+        // assertion consumer url is pac4j callback url
+        String callbackUrl = getCallbackUrl();
+        context.setAssertionConsumerUrl(callbackUrl);
+
+        SignatureTrustEngine trustEngine = this.signatureTrustEngineProvider.build();
+        Decrypter decrypter = this.encryptionProvider.buildDecrypter();
+
+        this.handler.receiveMessage(context, trustEngine);
+
+        this.responseValidator.validateSamlLogOutResponse(context, trustEngine, decrypter);
     }
 
     public void setIdpMetadataPath(final String idpMetadataPath) {

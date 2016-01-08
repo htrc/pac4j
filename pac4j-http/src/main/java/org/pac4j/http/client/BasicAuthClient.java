@@ -15,8 +15,6 @@
  */
 package org.pac4j.http.client;
 
-import java.io.UnsupportedEncodingException;
-
 import org.apache.commons.codec.binary.Base64;
 import org.pac4j.core.client.BaseClient;
 import org.pac4j.core.client.RedirectAction;
@@ -30,19 +28,21 @@ import org.pac4j.http.credentials.UsernamePasswordCredentials;
 import org.pac4j.http.profile.HttpProfile;
 import org.pac4j.http.profile.ProfileCreator;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * This class is the client to authenticate users through HTTP basic auth.
- * <p />
+ * <p/>
  * For authentication, the user is redirected to the callback url. If the user is not authenticated by basic auth, a
  * specific exception : {@link RequiresHttpAction} is returned which must be handled by the application to force
  * authentication.
- * <p />
+ * <p/>
  * The realm name can be defined using the {@link #setRealmName(String)} method.
- * <p />
+ * <p/>
  * It returns a {@link org.pac4j.http.profile.HttpProfile}.
- * 
- * @see org.pac4j.http.profile.HttpProfile
+ *
  * @author Jerome Leleu
+ * @see org.pac4j.http.profile.HttpProfile
  * @since 1.4.0
  */
 public class BasicAuthClient extends BaseHttpClient {
@@ -57,7 +57,7 @@ public class BasicAuthClient extends BaseHttpClient {
     }
 
     public BasicAuthClient(final UsernamePasswordAuthenticator usernamePasswordAuthenticator,
-            final ProfileCreator profilePopulator) {
+                           final ProfileCreator profilePopulator) {
         setUsernamePasswordAuthenticator(usernamePasswordAuthenticator);
         setProfileCreator(profilePopulator);
     }
@@ -134,8 +134,13 @@ public class BasicAuthClient extends BaseHttpClient {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(HttpProfile httpProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(HttpProfile httpProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        throw new UnsupportedOperationException("Unsupported operation logout!");
     }
 
     @Override

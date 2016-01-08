@@ -58,7 +58,7 @@ public class VkClient extends BaseOAuth20Client<VkProfile> {
 	}
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(VkProfile vkProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(VkProfile vkProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

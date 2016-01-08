@@ -64,7 +64,7 @@ public class GitHubClient extends BaseOAuth20Client<GitHubProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(GitHubProfile gitHubProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(GitHubProfile gitHubProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

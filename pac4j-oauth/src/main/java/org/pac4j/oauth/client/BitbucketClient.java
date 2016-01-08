@@ -49,7 +49,7 @@ public class BitbucketClient extends BaseOAuth10Client<BitbucketProfile>
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(BitbucketProfile bitbucketProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(BitbucketProfile bitbucketProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

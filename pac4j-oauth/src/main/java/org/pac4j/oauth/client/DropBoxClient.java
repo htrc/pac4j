@@ -56,7 +56,7 @@ public class DropBoxClient extends BaseOAuth10Client<DropBoxProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(DropBoxProfile dropBoxProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(DropBoxProfile dropBoxProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

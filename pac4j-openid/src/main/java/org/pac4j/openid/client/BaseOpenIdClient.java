@@ -196,4 +196,8 @@ public abstract class BaseOpenIdClient<U extends CommonProfile> extends BaseClie
     public Protocol getProtocol() {
         return Protocol.OPENID;
     }
+
+    public void validateSingleLogOut(WebContext webContext){
+        throw new UnsupportedOperationException("Logout not supported!");
+    }
 }

@@ -163,8 +163,13 @@ public class FormClient extends BaseHttpClient {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(HttpProfile httpProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(HttpProfile httpProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        throw new UnsupportedOperationException("Unsupported operation logout!");
     }
 
     @Override

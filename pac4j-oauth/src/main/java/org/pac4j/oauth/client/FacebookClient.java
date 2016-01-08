@@ -106,7 +106,7 @@ public class FacebookClient extends BaseOAuth20Client<FacebookProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(FacebookProfile facebookProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(FacebookProfile facebookProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

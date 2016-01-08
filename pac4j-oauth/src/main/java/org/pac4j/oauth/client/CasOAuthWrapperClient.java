@@ -67,7 +67,7 @@ public class CasOAuthWrapperClient extends BaseOAuth20Client<CasOAuthWrapperProf
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(CasOAuthWrapperProfile casOAuthWrapperProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(CasOAuthWrapperProfile casOAuthWrapperProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

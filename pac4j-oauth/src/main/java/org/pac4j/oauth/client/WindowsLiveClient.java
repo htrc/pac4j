@@ -55,7 +55,7 @@ public class WindowsLiveClient extends BaseOAuth20Client<WindowsLiveProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(WindowsLiveProfile windowsLiveProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(WindowsLiveProfile windowsLiveProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

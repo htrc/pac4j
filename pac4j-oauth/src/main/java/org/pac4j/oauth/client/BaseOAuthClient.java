@@ -355,4 +355,8 @@ public abstract class BaseOAuthClient<U extends OAuth20Profile> extends BaseClie
     public Protocol getProtocol() {
         return Protocol.OAUTH;
     }
+
+    public void validateSingleLogOut(WebContext webContext){
+        throw new UnsupportedOperationException("Unsupported operation logout!");
+    }
 }

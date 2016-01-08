@@ -89,4 +89,9 @@ public abstract class BaseHttpClient extends BaseClient<UsernamePasswordCredenti
     public Protocol getProtocol() {
         return Protocol.HTTP;
     }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        throw new UnsupportedOperationException("Unsupported operation logout!");
+    }
 }

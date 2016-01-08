@@ -57,7 +57,7 @@ public class LinkedInClient extends BaseOAuth10Client<LinkedInProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(LinkedInProfile linkedInProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(LinkedInProfile linkedInProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

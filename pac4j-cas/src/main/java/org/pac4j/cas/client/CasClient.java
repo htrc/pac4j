@@ -334,8 +334,13 @@ public class CasClient extends BaseClient<CasCredentials, CasProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(CasProfile casProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(CasProfile casProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public void validateSingleLogOut(WebContext webContext) {
+        throw new UnsupportedOperationException("Unsupported operation logout!");
     }
 
     @Override

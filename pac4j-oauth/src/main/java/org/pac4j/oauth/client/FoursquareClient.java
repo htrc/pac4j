@@ -50,7 +50,7 @@ public class FoursquareClient extends BaseOAuth20Client<FoursquareProfile>{
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(FoursquareProfile foursquareProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(FoursquareProfile foursquareProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

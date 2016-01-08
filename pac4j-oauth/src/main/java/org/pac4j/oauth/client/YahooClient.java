@@ -57,7 +57,7 @@ public class YahooClient extends BaseOAuth10Client<YahooProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(YahooProfile yahooProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(YahooProfile yahooProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

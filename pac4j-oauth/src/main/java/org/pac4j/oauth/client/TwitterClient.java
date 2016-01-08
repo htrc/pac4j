@@ -62,7 +62,7 @@ public class TwitterClient extends BaseOAuth10Client<TwitterProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(TwitterProfile twitterProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(TwitterProfile twitterProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

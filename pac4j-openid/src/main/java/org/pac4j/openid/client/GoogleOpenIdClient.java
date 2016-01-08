@@ -91,7 +91,7 @@ public class GoogleOpenIdClient extends BaseOpenIdClient<GoogleOpenIdProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(GoogleOpenIdProfile googleOpenIdProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(GoogleOpenIdProfile googleOpenIdProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 }

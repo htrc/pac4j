@@ -311,11 +311,17 @@ Client<C, U>, Cloneable {
     }
 
     public RedirectAction getLogoutRedirectAction(U u, WebContext webContext){
-        return retrieveLoutoutRedirectAction(u, webContext);
+        return retrieveLogoutRedirectAction(u, webContext);
     }
 
     /**
      * Logout support
      */
-    public abstract RedirectAction retrieveLoutoutRedirectAction(U u, WebContext context);
+    public abstract RedirectAction retrieveLogoutRedirectAction(U u, WebContext context);
+
+    public void logout(WebContext webContext) {
+         validateSingleLogOut(webContext);
+    }
+
+    public abstract void validateSingleLogOut(WebContext webContext);
 }

@@ -58,7 +58,7 @@ public class WordPressClient extends BaseOAuth20Client<WordPressProfile> {
     }
 
     @Override
-    public RedirectAction retrieveLoutoutRedirectAction(WordPressProfile wordPressProfile, WebContext context) {
+    public RedirectAction retrieveLogoutRedirectAction(WordPressProfile wordPressProfile, WebContext context) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

@@ -20,20 +20,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.common.xml.SAMLConstants;
-import org.opensaml.saml2.core.Assertion;
-import org.opensaml.saml2.core.Audience;
-import org.opensaml.saml2.core.AudienceRestriction;
-import org.opensaml.saml2.core.AuthnStatement;
-import org.opensaml.saml2.core.Conditions;
-import org.opensaml.saml2.core.EncryptedAssertion;
-import org.opensaml.saml2.core.Issuer;
-import org.opensaml.saml2.core.NameID;
-import org.opensaml.saml2.core.NameIDType;
-import org.opensaml.saml2.core.Response;
-import org.opensaml.saml2.core.StatusCode;
-import org.opensaml.saml2.core.Subject;
-import org.opensaml.saml2.core.SubjectConfirmation;
-import org.opensaml.saml2.core.SubjectConfirmationData;
+import org.opensaml.saml2.core.*;
 import org.opensaml.saml2.encryption.Decrypter;
 import org.opensaml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml2.metadata.SPSSODescriptor;
@@ -72,6 +59,38 @@ public class Saml2ResponseValidator {
     /* maximum lifetime after a successfull authentication on an IDP */
     private int maximumAuthenticationLifetime = 3600;
 
+    public void validateSamlLogOutResponse(final ExtendedSAMLMessageContext context,
+                                           final SignatureTrustEngine trustEngine,
+                                           final Decrypter decrypter){
+        SAMLObject message = context.getInboundSAMLMessage();
+
+        if(!(message instanceof LogoutResponse)) {
+            throw new SamlException("Response instance is an unsupported type");
+        }
+
+        LogoutResponse response = (LogoutResponse) message;
+
+        if (!isIssueInstantValid(response.getIssueInstant())) {
+            throw new SamlException("Response issue instant is too old or in the future");
+        }
+
+        if (response.getIssuer() != null) {
+            validateIssuer(response.getIssuer(), context);
+        }
+
+        if (!StatusCode.SUCCESS_URI.equals(response.getStatus().getStatusCode().getValue())) {
+            String status = response.getStatus().getStatusCode().getValue();
+            if (response.getStatus().getStatusMessage() != null) {
+                status += " / " + response.getStatus().getStatusMessage().getMessage();
+            }
+            throw new SamlException("Authentication response is not success ; actual " + status);
+        }
+
+        if (response.getSignature() != null) {
+            validateSignature(response.getSignature(), context.getPeerEntityId(), trustEngine);
+            context.setInboundSAMLMessageAuthenticated(true);
+        }
+    }
     /**
      * Validates the SAML protocol response and the SAML SSO response.
      * The method decrypt encrypted assertions if any.
